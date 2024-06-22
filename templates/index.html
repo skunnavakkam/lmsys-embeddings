@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Comparison Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #plot {
+            width: 100%;
+            height: 600px;
+        }
+
+        .model-select {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Model Comparison Visualization</h1>
+    <div>
+        <label for="model-a-select">Model A:</label>
+        <select id="model-a-select" class="model-select"></select>
+        <label for="model-b-select">Model B:</label>
+        <select id="model-b-select" class="model-select"></select>
+        <button id="compare-button">Compare</button>
+    </div>
+    <div id="plot"></div>
+
+    <script>
+        $(document).ready(function () {
+            // Populate the dropdown menus
+            $.get('/get_models', function (data) {
+                let selectA = $('#model-a-select');
+                let selectB = $('#model-b-select');
+                data.forEach(function (model) {
+                    selectA.append($('<option></option>').attr('value', model).text(model));
+                    selectB.append($('<option></option>').attr('value', model).text(model));
+                });
+                // Set default selections
+                if (data.length >= 2) {
+                    selectA.val(data[0]);
+                    selectB.val(data[1]);
+                }
+            });
+
+            // Handle compare button click
+            $('#compare-button').click(function () {
+                let modelA = $('#model-a-select').val();
+                let modelB = $('#model-b-select').val();
+                if (modelA && modelB) {
+                    $.get('/get_data', { model_a: modelA, model_b: modelB }, function (data) {
+                        plotData(data);
+                    });
+                } else {
+                    alert('Please select both models');
+                }
+            });
+
+            function plotData(data) {
+                let traces = {
+                    'model_a': { x: [], y: [], text: [], mode: 'markers', type: 'scatter', name: 'Model A Wins', marker: { color: 'red' } },
+                    'model_b': { x: [], y: [], text: [], mode: 'markers', type: 'scatter', name: 'Model B Wins', marker: { color: 'blue' } },
+                    'tie': { x: [], y: [], text: [], mode: 'markers', type: 'scatter', name: 'Tie', marker: { color: 'green' } }
+                };
+
+                data.forEach(function (item) {
+                    let winner = item.winner === 'model_a' ? 'model_a' : (item.winner === 'model_b' ? 'model_b' : 'tie');
+                    traces[winner].x.push(item.pca_x);
+                    traces[winner].y.push(item.pca_y);
+                    traces[winner].text.push(`Model A: ${item.model_a}<br>Model B: ${item.model_b}<br>Winner: ${item.winner}`);
+                });
+
+                let layout = {
+                    title: 'Model Comparison PCA Visualization',
+                    xaxis: { title: 'PCA Component 1' },
+                    yaxis: { title: 'PCA Component 2' },
+                    hovermode: 'closest'
+                };
+
+                Plotly.newPlot('plot', Object.values(traces), layout);
+            }
+        });
+    </script>
+</body>
+
+</html>

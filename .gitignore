@@ -1,0 +1,4 @@
+data.parquet
+data.csv
+data.db
+venv/*

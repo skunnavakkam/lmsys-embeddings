@@ -4,13 +4,36 @@ from flask import Flask, render_template, jsonify, request
 import numpy as np
 from sklearn.decomposition import PCA
 
-app = Flask(__name__)
+
+# Global variable to store PCA object
+pca = None
 
 
 def get_db_connection():
     conn = sqlite3.connect("data.db")
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def initialize_pca():
+    global pca
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT embedding FROM chatbot_arena")
+    all_embeddings = cursor.fetchall()
+    conn.close()
+
+    all_embeddings_array = np.array(
+        [json.loads(row["embedding"]) for row in all_embeddings]
+    )
+    pca = PCA(n_components=2)
+    pca.fit(all_embeddings_array)
+
+
+initialize_pca()
+
+
+app = Flask(__name__)
 
 
 @app.route("/")
@@ -58,8 +81,7 @@ def get_data():
 
     # Apply PCA
     embeddings_array = np.array([d["embeddings"] for d in processed_data])
-    pca = PCA(n_components=2)
-    pca_result = pca.fit_transform(embeddings_array)
+    pca_result = pca.transform(embeddings_array)
 
     for i, d in enumerate(processed_data):
         d["pca_x"] = float(pca_result[i, 0])

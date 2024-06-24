@@ -61,8 +61,8 @@ def get_data():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT * FROM chatbot_arena WHERE (model_a = ? AND model_b = ?) OR (model_a = ? AND model_b = ?)",
-        (model_a, model_b, model_b, model_a),
+        "SELECT * FROM chatbot_arena WHERE (model_a = ? AND model_b = ?)",
+        (model_a, model_b),
     )
     data = cursor.fetchall()
     conn.close()
@@ -76,6 +76,7 @@ def get_data():
                 "model_b": row["model_b"],
                 "winner": row["winner"],
                 "embeddings": embeddings,
+                "prompt": row["user_prompt"],
             }
         )
 

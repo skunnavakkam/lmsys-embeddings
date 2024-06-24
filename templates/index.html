@@ -76,7 +76,7 @@
                     let winner = item.winner === 'model_a' ? 'model_a' : (item.winner === 'model_b' ? 'model_b' : 'tie');
                     traces[winner].x.push(item.pca_x);
                     traces[winner].y.push(item.pca_y);
-                    traces[winner].text.push(`Model A: ${item.model_a}<br>Model B: ${item.model_b}<br>Winner: ${item.winner}`);
+                    traces[winner].text.push(`${item.prompt}`);
                 });
 
                 let layout = {
